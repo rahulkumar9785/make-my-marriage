@@ -4,9 +4,11 @@ A wedding management web application for couples and their families.
 
 ## Current milestone
 
-Phase 1 provides a minimal Next.js App Router scaffold: a homepage, global styles,
-root layout, and an application health endpoint. Authentication, wedding modules,
-database access, and external integrations are planned for subsequent milestones.
+The application scaffold and public homepage with interactive sample previews are
+implemented, including global styles, root layout, and an application health
+endpoint. Authentication, wedding modules, database access, and external
+integrations are planned for subsequent milestones. See the
+[project status](docs/PROJECT_STATUS.md) for progress, validation, and limitations.
 
 ## Local development
 
@@ -56,6 +58,7 @@ Later milestones add custom server-side sessions, Cloudflare R2, Resend, Google
 Places, and YouTube embedding, with Vercel hosting and scheduled email processing.
 
 - [Product requirements](docs/PRD.md)
+- [Project status and milestone history](docs/PROJECT_STATUS.md)
 - [System design](docs/SYSTEM_DESIGN.md)
 - [Database design](docs/DATABASE_DESIGN.md)
 - [API design](docs/API_DESIGN.md)
