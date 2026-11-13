@@ -63,7 +63,6 @@ const features = [
 export default function HomePage() {
   const [tab, setTab] = useState(0);
   const [menu, setMenu] = useState(false);
-  const [preview, setPreview] = useState(false);
   return (
     <>
       <a className="skip-link" href="#main">
@@ -89,22 +88,13 @@ export default function HomePage() {
                 {label}
               </a>
             ))}
-            <button
-              className="button small mobile-planning"
-              onClick={() => {
-                setMenu(false);
-                setPreview(true);
-              }}
-            >
-              Begin Planning <span aria-hidden="true">↗</span>
-            </button>
           </nav>
-          <button
-            className="button small header-planning"
-            onClick={() => setPreview(true)}
-          >
-            Begin Planning <span aria-hidden="true">↗</span>
-          </button>
+          <a className="header-login" href="/login">
+            Log in
+          </a>
+          <a className="button small header-planning" href="/signup">
+            Sign up
+          </a>
           <button
             className="menu-button"
             aria-label="Toggle navigation"
@@ -130,9 +120,9 @@ export default function HomePage() {
               quiet elegance.
             </p>
             <div className="actions">
-              <button className="button" onClick={() => setPreview(true)}>
+              <a className="button" href="/signup">
                 Start Planning <span aria-hidden="true">→</span>
-              </button>
+              </a>
               <a className="button secondary" href="#interactive-showcase">
                 Explore the Platform
               </a>
@@ -578,11 +568,11 @@ export default function HomePage() {
                 ],
                 [
                   "Can we plan a wedding with multiple events?",
-                  "Yes. The planned workspace brings ceremonies, timelines, guests, and tasks together across your wedding celebrations.",
+                  "You can create your wedding workspace today. Tools for individual ceremonies, timelines, guests, and tasks are planned for future updates.",
                 ],
                 [
                   "Is the platform ready to use?",
-                  "You are viewing our homepage and interactive product preview. Account creation and wedding management are in development.",
+                  "Account creation and wedding setup are ready. Create your account, save your wedding details, and open your private dashboard. Planning modules are coming in future updates.",
                 ],
               ].map(([q, a]) => (
                 <details key={q}>
@@ -625,9 +615,9 @@ export default function HomePage() {
               Bring every detail and everyone who matters into one beautiful
               planning experience.
             </p>
-            <button className="button" onClick={() => setPreview(true)}>
+            <a className="button" href="/signup">
               Start Planning Today <span aria-hidden="true">↗</span>
-            </button>
+            </a>
             <p className="micro">
               Thoughtfully made for you and your families.
             </p>
@@ -652,41 +642,6 @@ export default function HomePage() {
           </nav>
         </div>
       </footer>
-      {preview && (
-        <dialog
-          ref={(node) => {
-            if (node && !node.open) node.showModal();
-          }}
-          onCancel={() => setPreview(false)}
-          className="preview-dialog"
-          aria-labelledby="preview-title"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setPreview(false);
-          }}
-        >
-          <button
-            autoFocus
-            className="dialog-close"
-            aria-label="Close preview"
-            onClick={() => setPreview(false)}
-          >
-            ×
-          </button>
-          <p className="eyebrow sage">A BEAUTIFUL BEGINNING</p>
-          <h2 id="preview-title">Your planning space is on its way.</h2>
-          <p>
-            We’re building the tools to bring your celebration together. For
-            now, explore the interactive preview of what’s coming.
-          </p>
-          <a
-            className="button"
-            href="#interactive-showcase"
-            onClick={() => setPreview(false)}
-          >
-            Explore the Preview →
-          </a>
-        </dialog>
-      )}
     </>
   );
 }

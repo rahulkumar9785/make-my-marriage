@@ -1,4 +1,10 @@
 # Make My Marriage
+
+> Account access and initial wedding setup clarification (2026-11-12): see
+> [onboarding implementation decisions](ONBOARDING_IMPLEMENTATION.md) for the
+> implemented authentication policies, token hashing, rate limits, and scope.
+> Earlier dated implementation notes are not evidence of implemented modules.
+
 ## REST API Design Document
 
 **Version:** V1  
