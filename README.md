@@ -55,7 +55,9 @@ change. The formatter excludes the design documents.
 
 The integration suite uses Vitest with an isolated temporary MongoDB replica set;
 it never uses your Atlas database. The browser suite also owns a temporary replica
-set and runs a local server on port 3210. It tests the actual forms and routes;
+set and runs a local server on an OS-selected available loopback port. It waits
+for its own child server to report readiness before checking health, and aborts
+if that child exits. It tests the actual forms and routes;
 email delivery is captured in integration tests, and reset tokens are seeded only
 in the isolated browser-test database. No test sends real emails.
 

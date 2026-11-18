@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-11-13
+Last updated: 2026-11-18
 
 ## Current state
 
@@ -100,6 +100,23 @@ management remain planned.
 - Password recovery email delivery was not tested. The previously reviewed shared
   rate-limit quota and browser test-runner port ownership issues remain unresolved;
   passing these manual flows does not resolve those review findings.
+
+### Authentication and browser runner review fixes — 2026-11-18
+
+- Removed the shared application-wide authentication quota. Atomic per-email
+  and per-reset-token throttles remain; blocked attempts cannot exhaust another
+  identity’s allowance, and distinct users do not share a hard access quota.
+- Browser tests now select an available loopback port and require readiness from
+  the spawned Next.js child before probing health. Startup failure, timeout, or
+  child exit prevents or stops browser tests instead of targeting another app.
+- Added regression coverage for all four authentication limit scopes, port
+  collisions with a healthy unrelated listener, missing child readiness, and
+  server exit after successful startup.
+- Validation: 24 regression/integration tests passed using isolated infrastructure.
+  All 6 desktop/mobile browser tests, ESLint, TypeScript, formatting, production
+  build, and `git diff --check` also passed. No live Atlas data was used by tests.
+- Both review findings from 2026-11-13 are resolved by this milestone. Live email
+  delivery remains outside this change and is still unverified.
 
 ## Known next steps
 

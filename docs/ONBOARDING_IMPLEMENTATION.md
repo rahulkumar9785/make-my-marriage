@@ -32,11 +32,13 @@ open. Earlier dated implementation notes do not describe the current checkout.
 - Mutation APIs require a matching Origin and JSON content type. APP_URL is the
   trusted origin; host and forwarded-host headers cannot override it.
 - Rate limits use atomic MongoDB fixed-window counters (TTL cleanup), shared
-  across instances. Login: 10/email and 100/global/minute; signup: 5/email/hour
-  and 100/global/hour; recovery: 3/email/hour and 100/global/hour; reset:
-  10/token/hour and 100/global/hour. Identifiers are HMAC hashed. Limits do not
-  depend on untrusted client IP headers. Global limits are intentionally conservative
-  for V1 and should be tuned with production traffic.
+  across instances for each identity. Login: 10/email/minute; signup:
+  5/email/hour; recovery: 3/email/hour; reset: 10/token/hour. Identifiers are HMAC
+  hashed. Application-wide hard quotas were removed on 2026-11-18 because a
+  caller could exhaust them and deny account access to unrelated users. Rejected
+  attempts affect only their own identity's counter. Limits do not trust client
+  IP headers; broader per-source traffic controls belong at a trusted deployment
+  edge rather than an application-wide account-access lockout.
 - Wedding creation and its Admin membership are one transaction. Unique user
   membership prevents duplicate weddings under concurrent submissions. Transaction
   support (Atlas or a replica set) is required. Private data is resolved through
@@ -55,3 +57,13 @@ Lint, TypeScript, formatting, production build, database integration tests with 
 isolated replica set, and browser tests for account access, onboarding, persistence,
 logout, recovery, authorization, and responsive layouts. Live Atlas and Resend
 verification needs local credentials and a verified sender.
+
+## Browser test server isolation
+
+The runner selects an available loopback port and passes the same origin to the
+app and Playwright. It waits for the spawned Next.js child’s own listening-ready
+output before sending a health request, rejects startup failure or timeout, and
+stops browser tests if that child exits. A healthy response from another service
+cannot independently mark the test server ready. Regression tests cover an occupied
+port, a healthy unrelated listener without child readiness, successful startup,
+and exit after readiness. Only the temporary test replica set is used.

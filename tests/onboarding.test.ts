@@ -34,7 +34,7 @@ import {
   hashPassword,
   verifyPassword,
 } from "../src/lib/server/security";
-import { rateLimit } from "../src/lib/server/rate-limit";
+import { authLimit, rateLimit } from "../src/lib/server/rate-limit";
 import { body, endpoint, json } from "../src/lib/server/http";
 import { GET as me } from "../src/app/api/auth/me/route";
 import {
@@ -380,6 +380,37 @@ describe("password recovery", () => {
 });
 
 describe("shared persistent rate limits", () => {
+  it.each([
+    ["signup", 5],
+    ["login", 10],
+    ["forgot", 3],
+    ["reset", 10],
+  ] as const)(
+    "keeps %s available to other identities after repeated blocked attempts",
+    async (action, limit) => {
+      // Pin the clock away from a fixed-window boundary.
+      const now = vi
+        .spyOn(Date, "now")
+        .mockReturnValue(new Date("2030-01-01T12:30:00Z").getTime());
+      try {
+        for (let i = 0; i < limit; i++)
+          await authLimit(action, "blocked-identity");
+        for (let i = 0; i < 100; i++) {
+          await expect(
+            authLimit(action, "blocked-identity"),
+          ).rejects.toMatchObject({ status: 429, code: "RATE_LIMITED" });
+        }
+        await expect(
+          authLimit(action, "unrelated-identity"),
+        ).resolves.toBeUndefined();
+        // High traffic from distinct identities must not cause a global lockout.
+        for (let i = 0; i < 101; i++)
+          await authLimit(action, `other-identity-${i}`);
+      } finally {
+        now.mockRestore();
+      }
+    },
+  );
   it("enforces an atomic limit across concurrent requests without storing identifiers", async () => {
     const results = await Promise.allSettled(
       Array.from({ length: 8 }, () =>

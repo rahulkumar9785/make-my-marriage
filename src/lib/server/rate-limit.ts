@@ -41,7 +41,8 @@ export async function authLimit(
   identifier: string,
 ) {
   const seconds = action === "login" ? 60 : 3600;
-  await rateLimit(`${action}:global`, "global", 100, seconds);
+  // Keep admission independent between identities. A shared hard quota lets an
+  // unauthenticated caller deny account access to everyone else.
   await rateLimit(
     action,
     identifier,

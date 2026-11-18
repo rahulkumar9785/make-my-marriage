@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { setTimeout } from "node:timers/promises";
 import { access, rm } from "node:fs/promises";
+import { availableTestPort, monitorTestServer } from "./e2e-server.mjs";
 
 // Dev and build share generated types. Do not disturb a developer's running server.
 let devLocked = false;
@@ -25,7 +26,8 @@ const replica = await MongoMemoryReplSet.create({
     version: process.env.MONGOMS_VERSION || "7.0.24",
   },
 });
-const baseURL = "http://127.0.0.1:3210";
+const port = await availableTestPort();
+const baseURL = `http://127.0.0.1:${port}`;
 const env = {
   ...process.env,
   MONGODB_URI: replica.getUri("browser_test"),
@@ -44,15 +46,11 @@ const server = spawn(
     "--hostname",
     "127.0.0.1",
     "--port",
-    "3210",
+    String(port),
   ],
   { env, stdio: ["ignore", "pipe", "pipe"] },
 );
-let serverFailure = "";
-server.stderr.on("data", (data) => {
-  serverFailure = (serverFailure + data).slice(-4000);
-});
-server.stdout.on("data", () => {});
+const monitor = monitorTestServer(server);
 let tests;
 let shuttingDown = false;
 async function cleanup() {
@@ -76,31 +74,25 @@ process.once("SIGTERM", async () => {
   process.exit(143);
 });
 try {
-  let ready = false;
-  for (let attempt = 0; attempt < 120; attempt++) {
-    if (server.exitCode !== null)
-      throw new Error(`Test server stopped: ${serverFailure}`);
-    try {
-      const response = await fetch(`${baseURL}/api/health`, {
-        signal: AbortSignal.timeout(1000),
-      });
-      if (response.ok) {
-        ready = true;
-        break;
-      }
-    } catch {}
-    await setTimeout(250);
-  }
-  if (!ready)
-    throw new Error(`Test server did not become ready: ${serverFailure}`);
+  await monitor.waitUntilReady(baseURL);
   tests = spawn(
     process.execPath,
     ["node_modules/@playwright/test/cli.js", "test"],
     { env, stdio: "inherit" },
   );
-  process.exitCode = await new Promise((resolve) =>
-    tests.once("exit", (code) => resolve(code ?? 1)),
-  );
+  // Stop the browser worker immediately if its server exits during the suite.
+  const stopTests = () => tests.kill("SIGTERM");
+  server.once("exit", stopTests);
+  try {
+    monitor.assertRunning();
+    process.exitCode = await new Promise((resolve, reject) => {
+      tests.once("error", reject);
+      tests.once("exit", (code) => resolve(code ?? 1));
+    });
+    monitor.assertRunning();
+  } finally {
+    server.removeListener("exit", stopTests);
+  }
 } finally {
   await cleanup();
 }
